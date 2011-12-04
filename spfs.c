@@ -94,10 +94,10 @@ pthread_cond_t read_cond = PTHREAD_COND_INITIALIZER;
  */
 static void notify_main_thread(sp_session *sess)
 {
-	pthread_mutex_lock(&g_notify_mutex);
-	g_notify_do = 1;
-	pthread_cond_signal(&g_notify_cond);
-	pthread_mutex_unlock(&g_notify_mutex);
+  pthread_mutex_lock(&g_notify_mutex);
+  g_notify_do = 1;
+  pthread_cond_signal(&g_notify_cond);
+  pthread_mutex_unlock(&g_notify_mutex);
 }
 
 /**
@@ -110,10 +110,10 @@ static int music_delivery(sp_session *sess, const sp_audioformat *format,
 {
   size_t s;
 
-	if (num_frames == 0)
-		return 0; // Audio discontinuity, do nothing
+  if (num_frames == 0)
+    return 0; // Audio discontinuity, do nothing
 
-	s = num_frames * sizeof(int16_t) * format->channels;
+  s = num_frames * sizeof(int16_t) * format->channels;
   //  fwrite(frames, s, 1, stdout);
 
   pthread_mutex_lock(&read_mutex);
@@ -126,7 +126,7 @@ static int music_delivery(sp_session *sess, const sp_audioformat *format,
 
   pthread_mutex_unlock(&read_mutex);
   
-	return num_frames;
+  return num_frames;
 }
 
 
@@ -139,11 +139,11 @@ static void end_of_track(sp_session *sess)
 {
   printf("Spotify: End of track\n");
 
-	pthread_mutex_lock(&g_notify_mutex);
-	g_playback_done = 1;
+  pthread_mutex_lock(&g_notify_mutex);
+  g_playback_done = 1;
   track_ended = 1;
-	pthread_cond_signal(&g_notify_cond);
-	pthread_mutex_unlock(&g_notify_mutex);
+  pthread_cond_signal(&g_notify_cond);
+  pthread_mutex_unlock(&g_notify_mutex);
 }
 
 
@@ -202,24 +202,24 @@ static void logged_in(sp_session *sess, sp_error error)
 }
 
 static sp_session_callbacks session_callbacks = {
-	.logged_in = &logged_in,
-	.notify_main_thread = &notify_main_thread,
-	.music_delivery = &music_delivery,
-	.metadata_updated = NULL,
-	.play_token_lost = &play_token_lost,
-	.log_message = NULL,
-	.end_of_track = &end_of_track,
+  .logged_in = &logged_in,
+  .notify_main_thread = &notify_main_thread,
+  .music_delivery = &music_delivery,
+  .metadata_updated = NULL,
+  .play_token_lost = &play_token_lost,
+  .log_message = NULL,
+  .end_of_track = &end_of_track,
 };
 
 static sp_session_config session_config = {
-	.api_version = SPOTIFY_API_VERSION,
-	.cache_location = "tmp",
-	.settings_location = "tmp",
-	.application_key = g_appkey,
-	.application_key_size = 0, // Set in main()
-	.user_agent = "spotifilesystem",
-	.callbacks = &session_callbacks,
-	NULL,
+  .api_version = SPOTIFY_API_VERSION,
+  .cache_location = "tmp",
+  .settings_location = "tmp",
+  .application_key = g_appkey,
+  .application_key_size = 0, // Set in main()
+  .user_agent = "spotifilesystem",
+  .callbacks = &session_callbacks,
+  NULL,
 };
 
 
@@ -373,8 +373,8 @@ static int spfs_open(const char *path, struct fuse_file_info *fi)
 
   printf("Spotify: Loading %s by %s\n", sp_track_name(file->track), sp_artist_name(sp_track_artist(file->track, 0)));
 
-	sp_session_player_load(session, file->track);
-	sp_session_player_play(session, 1);
+  sp_session_player_load(session, file->track);
+  sp_session_player_play(session, 1);
 
   write_wav_header(frame_buf);
   frame_buf_size = 44;
@@ -431,16 +431,16 @@ static struct fuse_operations spfs_oper = {
 void *start_spotify(void *arg)
 {
   printf("Spotify: Started\n");
-	int next_timeout = 0;
+  int next_timeout = 0;
   sp_error err;
 
-	/* Create session */
-	session_config.application_key_size = g_appkey_size;
+  /* Create session */
+  session_config.application_key_size = g_appkey_size;
 
   err = sp_session_create(&session_config, &session);
 
   if(err != SP_ERROR_OK) {
-		fprintf(stderr, "Unable to create session: %s\n",
+    fprintf(stderr, "Unable to create session: %s\n",
             sp_error_message(err));
     return NULL;
   }
@@ -449,40 +449,40 @@ void *start_spotify(void *arg)
   sp_session_login(session, username, password, 1);
 
 
-	for (;;) {
-		if (next_timeout == 0) {
-			while(!g_notify_do && !g_playback_done)
-				pthread_cond_wait(&g_notify_cond, &g_notify_mutex);
-		} else {
-			struct timespec ts;
+  for (;;) {
+    if (next_timeout == 0) {
+      while(!g_notify_do && !g_playback_done)
+        pthread_cond_wait(&g_notify_cond, &g_notify_mutex);
+    } else {
+      struct timespec ts;
 
 #if _POSIX_TIMERS > 0
-			clock_gettime(CLOCK_REALTIME, &ts);
+      clock_gettime(CLOCK_REALTIME, &ts);
 #else
-			struct timeval tv;
-			gettimeofday(&tv, NULL);
-			TIMEVAL_TO_TIMESPEC(&tv, &ts);
+      struct timeval tv;
+      gettimeofday(&tv, NULL);
+      TIMEVAL_TO_TIMESPEC(&tv, &ts);
 #endif
-			ts.tv_sec += next_timeout / 1000;
-			ts.tv_nsec += (next_timeout % 1000) * 1000000;
+      ts.tv_sec += next_timeout / 1000;
+      ts.tv_nsec += (next_timeout % 1000) * 1000000;
 
-			pthread_cond_timedwait(&g_notify_cond, &g_notify_mutex, &ts);
-		}
+      pthread_cond_timedwait(&g_notify_cond, &g_notify_mutex, &ts);
+    }
 
-		g_notify_do = 0;
-		pthread_mutex_unlock(&g_notify_mutex);
+    g_notify_do = 0;
+    pthread_mutex_unlock(&g_notify_mutex);
 
-		if (g_playback_done) {
-      //			track_ended();
-			g_playback_done = 0;
-		}
+    if (g_playback_done) {
+      //      track_ended();
+      g_playback_done = 0;
+    }
 
-		do {
-			sp_session_process_events(session, &next_timeout);
-		} while (next_timeout == 0);
+    do {
+      sp_session_process_events(session, &next_timeout);
+    } while (next_timeout == 0);
 
-		pthread_mutex_lock(&g_notify_mutex);
-	}
+    pthread_mutex_lock(&g_notify_mutex);
+  }
 }
 
 void *start_fuse(void *arg)
