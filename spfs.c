@@ -217,16 +217,10 @@ static sp_session_config session_config = {
 	.settings_location = "tmp",
 	.application_key = g_appkey,
 	.application_key_size = 0, // Set in main()
-	.user_agent = "spotify-jukebox-example",
+	.user_agent = "spotifilesystem",
 	.callbacks = &session_callbacks,
 	NULL,
 };
-
-
-
-
-
-
 
 
 static int spfs_mkdir(const char *path, mode_t mode)
@@ -241,12 +235,12 @@ static int spfs_mkdir(const char *path, mode_t mode)
   strncpy(folder->name, path + 1, MAX_NAME_LENGTH);
 
   /*
-  char search_string[MAX_NAME_LENGTH];
-  memset(search_string, '\0', MAX_NAME_LENGTH * sizeof(char));
-  strncpy(search_string, path + 1, strlen(path) - 5);
-  printf("Spotify: Searching for %s\n", search_string);
-  sp_search_create(session, search_string, 0, 1, 0, 0, 0, 0,
-                   &search_complete, (void *)folder);
+    char search_string[MAX_NAME_LENGTH];
+    memset(search_string, '\0', MAX_NAME_LENGTH * sizeof(char));
+    strncpy(search_string, path + 1, strlen(path) - 5);
+    printf("Spotify: Searching for %s\n", search_string);
+    sp_search_create(session, search_string, 0, 1, 0, 0, 0, 0,
+    &search_complete, (void *)folder);
   */
 
   printf("Spotify: Searching for %s\n", path + 1);
@@ -332,7 +326,7 @@ static int spfs_getattr(const char *path, struct stat *stbuf)
 }
   
 static int spfs_readdir(const char *path, void *buf, fuse_fill_dir_t filler,
-                         off_t offset, struct fuse_file_info *fi)
+                        off_t offset, struct fuse_file_info *fi)
 {
   folder_t *folder;
 
@@ -391,7 +385,7 @@ static int spfs_open(const char *path, struct fuse_file_info *fi)
 }
   
 static int spfs_read(const char *path, char *buf, size_t size, off_t offset,
-                      struct fuse_file_info *fi)
+                     struct fuse_file_info *fi)
 {
   (void) fi;
 
@@ -447,7 +441,7 @@ void *start_spotify(void *arg)
 
   if(err != SP_ERROR_OK) {
 		fprintf(stderr, "Unable to create session: %s\n",
-			sp_error_message(err));
+            sp_error_message(err));
     return NULL;
   }
 
