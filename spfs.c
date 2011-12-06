@@ -24,6 +24,15 @@
 
 // to compile, you need appkey.c and password.c provided.
 
+// Assorted TODOS:
+//  * Makefile
+//  * Handle permissions
+//  * Correct-ish file sizes
+//  * Playback skip bugs
+//  * Segfault over time bugs
+//  * Album name in song title
+//  * rmdir
+
 #define FUSE_USE_VERSION  26
    
 #include <errno.h>
@@ -42,9 +51,9 @@
 #include "appkey.c"
 #include "password.c"
 
-#define MAX_FILE_SIZE 50000000
+#define MAX_FILE_SIZE 150000000
 #define MAX_NAME_LENGTH 512
-#define MAX_SEARCH_RESULTS 1000
+#define MAX_SEARCH_RESULTS 50
 
 sp_session *session;
 
